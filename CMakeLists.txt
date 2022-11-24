@@ -3,4 +3,4 @@ project(wet1)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(wet1 main.cpp AVL_Tree.cpp AVL_Tree.h BST.cpp BST.h Node.cpp Node.h A_Node.cpp A_Node.h)
+add_executable(wet1 main.cpp AVL_Tree.cpp AVL_Tree.h BST.cpp BST.h Node.cpp Node.h A_Node.cpp A_Node.h Player.cpp Player.h Team.cpp Team.h WorldCup.cpp WorldCup.h StatusType.cpp StatusType.h)
