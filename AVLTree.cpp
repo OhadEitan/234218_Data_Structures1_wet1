@@ -1,5 +1,68 @@
 #include "AVLTree.h"
 
+
+/******************************************************* tree details functions *******************************************************/
+
+
+template <class ptr_type, class condition>
+int AVLTree<ptr_type, condition>::get_tree_height()
+{
+    if (root->right == nullptr && root->left == nullptr)
+    {
+        return EMPTY_TREE;
+    }
+    return root->height;
+}
+
+template <class ptr_type, class condition>
+int AVLTree<ptr_type, condition>::get_num_of_nodes()
+{
+    return num_of_nodes;
+}
+
+template <class ptr_type, class condition>
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_max_node()
+{
+    return get_max_node_by_root(root);
+}
+
+template <class ptr_type, class condition>
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_max_node_by_root(AVLNode<ptr_type>* given_root)
+{
+    AVLNode<ptr_type>* r;
+    if (given_root == nullptr)
+    {
+        return nullptr;
+    }
+    r = given_root;
+    while(r->right != nullptr)
+    {
+        r = r->right;
+    }
+    return r;
+}
+
+
+template <class ptr_type, class condition>
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_min_node_by_root(AVLNode<ptr_type>* given_root)
+{
+    AVLNode<ptr_type>* r;
+    if (given_root == nullptr)
+    {
+        return nullptr;
+    }
+    r = given_root;
+    while(r->left != nullptr)
+    {
+        r = r->left;
+    }
+    return r;
+}
+
+
+/******************************************************* balancing functions *******************************************************/
+
+
 template <class ptr_type, class condition>
 AVLNode<ptr_type>* AVLTree<ptr_type, condition>::make_LL_rotation(AVLNode<ptr_type>*& r)
 {
@@ -41,11 +104,12 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::make_LR_rotation(AVLNode<ptr_ty
     return make_LL_rotation(r);
 }
 
+
 template <class ptr_type, class condition>
 AVLNode<ptr_type>* AVLTree<ptr_type, condition>::balance_tree(AVLNode<ptr_type>*& r)
 {
     int bf = get_bf(r);
-    if (bf == 2)
+    if (bf == UNBALANCED_POSITIVE_BF)
     {
         if (get_bf(r->left) >= 0)
         {
@@ -56,7 +120,7 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::balance_tree(AVLNode<ptr_type>*
             return make_LR_rotation(r);
         }
     }
-    if (bf == -2)
+    if (bf == UNBALANCED_NEGATIVE_BF)
     {
         if (get_bf(r->right) >= 0)
         {
@@ -91,13 +155,6 @@ int AVLTree<ptr_type, condition>::get_bf(AVLNode<ptr_type>*& r)
 
 
 template <class ptr_type, class condition>
-int AVLTree<ptr_type, condition>::get_tree_height()
-{
-    return root->height;
-}
-
-
-template <class ptr_type, class condition>
 void AVLTree<ptr_type, condition>::update_height(AVLNode<ptr_type>*& r)
 {
     if (r->left == nullptr && r->right != nullptr)
@@ -119,31 +176,47 @@ void AVLTree<ptr_type, condition>::update_height(AVLNode<ptr_type>*& r)
             r->height = r->right->height + 1;
         }
     }
+    if (r->left == nullptr && r->right == nullptr)
+    {
+        r->height = 0;
+    }
 }
 
 
+/******************************************************* insert functions *******************************************************/
+
+
 template <class ptr_type, class condition>
-AVLNode<ptr_type>* AVLTree<ptr_type, condition>::insert2(AVLNode<ptr_type>*& r, ptr_type* data, AVLNode<ptr_type>*& r_new_junction)
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::insert_node(AVLNode<ptr_type>*& r, ptr_type* data, AVLNode<ptr_type>*& r_new_junction)
 {
     if (r == nullptr)
     {
         r = new AVLNode<ptr_type>(data);
         r_new_junction = r;
+        num_of_nodes++;
         return r;
     }
     else
     {
         condition cond;
-        if (cond(data, r->data))
+        Comparison result = cond(data->id, r->data);
+        if (result == Comparison::LESS_THAN)
         {
-            r->left = insert2(r->left, data, r_new_junction);
+            r->left = insert_node(r->left, data, r_new_junction);
+            update_height(r);
+            return balance_tree(r);
         }
-        else
+        if (result == Comparison::GREATER_THAN)
         {
-            r->right = insert2(r->right, data, r_new_junction);
+            r->right = insert_node(r->right, data, r_new_junction);
+            update_height(r);
+            return balance_tree(r);
         }
-        update_height(r);
-        return balance_tree(r);
+        if (result == Comparison::EQUAL)
+        {
+            r_new_junction = nullptr;
+            return r;
+        }
     }
 }
 
@@ -152,34 +225,349 @@ template <class ptr_type, class condition>
 AVLNode<ptr_type>* AVLTree<ptr_type, condition>::insert(ptr_type* data)
 {
     AVLNode<ptr_type>* r_new_junction = nullptr;
-    root = insert2(root, data, r_new_junction);
+    root = insert_node(root, data, r_new_junction);
     return r_new_junction;
 }
 
 
+/******************************************************* search functions *******************************************************/
+
+
 template <class ptr_type, class condition>
-void AVLTree<ptr_type, condition>::remove(int key)
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::search(int key)
 {
-    remove2(root, key);
+    AVLNode<ptr_type>* requested = nullptr;
+    return search_node(root, key, requested);
+}
+
+template <class ptr_type, class condition>
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::search_node(AVLNode<ptr_type> *&r, int key, AVLNode<ptr_type> *&requested)
+{
+    if (r == nullptr)
+    {
+        return nullptr;
+    }
+    else
+    {
+        condition cond;
+        AVLNode<ptr_type>* temp;
+        Comparison result = cond(key, r->data);
+        if (result == Comparison::LESS_THAN)
+        {
+            temp = search_node(r->left, key, requested);
+            if (temp != nullptr)
+            {
+                return temp;
+            }
+            return nullptr;
+        }
+        if (result == Comparison::GREATER_THAN)
+        {
+            temp = search_node(r->right, key, requested);
+            if (temp != nullptr)
+            {
+                return temp;
+            }
+            return nullptr;
+        }
+        if (result == Comparison::EQUAL)
+        {
+            requested = r;
+            return r;
+        }
+    }
+}
+
+
+/******************************************************* travel functions *******************************************************/
+
+
+template <class ptr_type, class condition>
+void AVLTree<ptr_type, condition>::inorder()
+{
+    inorder_travel(root);
 }
 
 
 template <class ptr_type, class condition>
-void AVLTree<ptr_type, condition>::remove2(AVLNode<ptr_type>*& r, int key)
+void AVLTree<ptr_type, condition>::inorder_travel(AVLNode<ptr_type>*& r)
 {
     if (r == nullptr)
     {
-        r = new AVLNode<ptr_type>(data);
-        return r;
+        return;
     }
-    else {
+    inorder_travel(r->left);
+    // do something with data
+    inorder_travel(r->right);
+}
+
+
+template <class ptr_type, class condition>
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_closest_left(int key)
+{
+    AVLNode<ptr_type>* requested = search(key);
+    if (requested == nullptr)
+    {
+        return nullptr;
+    }
+    if (requested->left == nullptr && requested->right != nullptr)
+    {
         condition cond;
-        if (cond(data, r->data)) {
-            r->left = insert2(r->left, data);
-        } else {
-            r->right = insert2(r->right, data);
+        bool* result = new bool();
+        *result = false;
+        AVLNode<ptr_type>* father = get_father(root, key, father, result);
+
+        while (cond(key, father->data) == Comparison::LESS_THAN && father->left == nullptr)
+        {
+            father = get_father()
         }
-        update_height(r);
-        return balance_tree(r);
+        get_father(root, key, father, result);
+        return father;
     }
+    if (requested->left != nullptr && requested->right != nullptr)
+    {
+        return get_max_node_by_root(requested->left);
+    }
+
+}
+
+
+template <class ptr_type, class condition>
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_father(AVLNode<ptr_type>* r, int key, AVLNode<ptr_type>*& requested, bool*& flag)
+{
+    if (r == nullptr)
+    {
+        return nullptr;
+    }
+    else
+    {
+        condition cond;
+        AVLNode<ptr_type>* temp;
+        Comparison result = cond(key, r->data);
+        if (result == Comparison::LESS_THAN)
+        {
+            temp = get_father(r->left, key, requested, flag);
+            if (temp != nullptr)
+            {
+                if (*flag == true)
+                {
+                    requested = r;
+                    *flag = false;
+                }
+                return temp;
+            }
+            return nullptr;
+        }
+        if (result == Comparison::GREATER_THAN)
+        {
+            temp = get_father(r->right, key, requested, flag);
+            if (temp != nullptr)
+            {
+                if (*flag == true)
+                {
+                    requested = r;
+                    *flag = false;
+                }
+                return temp;
+            }
+            return nullptr;
+        }
+        if (result == Comparison::EQUAL)
+        {
+            *flag = true;
+            return r;
+        }
+    }
+}
+
+
+template <class ptr_type, class condition>
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_closest_right(int key)
+{
+    AVLNode<ptr_type>* requested = search(key);
+    if (requested == nullptr)
+    {
+        return nullptr;
+    }
+    if (requested->right == nullptr)
+    {
+        AVLNode<ptr_type>* father = nullptr;
+        bool* result = new bool();
+        *result = false;
+        get_father(root, key, father, result);
+        return father;
+    }
+    return get_min_node_by_root(requested->right);
+}
+
+
+/******************************************************* removing functions *******************************************************/
+
+
+template <class ptr_type, class condition>
+bool AVLTree<ptr_type, condition>::remove(int key)
+{
+    bool* result = new bool();
+    *result = false;
+    remove_node(root, key, result, false);
+    bool value = *result;
+    delete result;
+    if (value == true)
+    {
+        num_of_nodes--;
+    }
+    return value;
+}
+
+
+template <class ptr_type, class condition>
+bool AVLTree<ptr_type, condition>::remove_and_erase(int key)
+{
+    bool* result = new bool();
+    *result = false;
+    remove_node(root, key, result, true);
+    bool value = *result;
+    delete result;
+    if (value == true)
+    {
+        num_of_nodes--;
+    }
+    return value;
+}
+
+
+template <class ptr_type, class condition>
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::find_successor(AVLNode<ptr_type>* b)
+{
+    b = b->left;
+    while(b->right != nullptr)
+    {
+        b = b->right;
+    }
+    return b;
+}
+
+
+template <class ptr_type, class condition>
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::remove_node(AVLNode<ptr_type> *&r, int key, bool*& result, bool erase)
+{
+    if (r == nullptr)
+    {
+        *result = *result + false;
+        return nullptr;
+    }
+    else
+    {
+        condition cond;
+        Comparison comp_result = cond(key, r->data);
+        if (comp_result == Comparison::EQUAL)
+        {
+            if (r->right == nullptr && r->left == nullptr) // junction is leaf
+            {
+                AVLNode<ptr_type>* temp = r;
+                if (erase)
+                {
+                    delete temp->data;
+                }
+                delete temp;
+                r = nullptr;
+                *result = true;
+                return r;
+            }
+            if (r->right == nullptr && r->left != nullptr) // junction has only left child
+            {
+                AVLNode<ptr_type>* temp = r;
+                r = r->left;
+                if (erase)
+                {
+                    delete temp->data;
+                }
+                delete temp;
+                *result = true;
+                return r;
+            }
+            if (r->right != nullptr && r->left == nullptr) // junction has only right child
+            {
+                AVLNode<ptr_type>* temp = r;
+                r = r->right;
+                if (erase)
+                {
+                    delete temp->data;
+                }
+                delete temp;
+                *result = true;
+                return r;
+            }
+            if (r->right != nullptr && r->left != nullptr) // junction has both children
+            {
+                AVLNode<ptr_type>* successor = find_successor(r);
+                AVLNode<ptr_type>* temp2;
+                temp2 = r;
+                if (erase)
+                {
+                    delete temp2->data;
+                }
+                r->data = successor->data;
+                remove_node(r->left, successor->data->id, result, false);
+                update_height(r);
+                *result = true;
+                return balance_tree(r);
+            }
+        }
+        if (comp_result == Comparison::LESS_THAN)
+        {
+            r->left = remove_node(r->left, key, result, erase);
+            update_height(r);
+            return balance_tree(r);
+        }
+        if (comp_result == Comparison::GREATER_THAN)
+        {
+            r->right = remove_node(r->right, key, result, erase);
+            update_height(r);
+            return balance_tree(r);
+        }
+    }
+}
+
+
+template <class ptr_type, class condition>
+void AVLTree<ptr_type, condition>::erase_data_in_node(AVLNode<ptr_type>*& r)
+{
+    if (r == nullptr)
+    {
+        return;
+    }
+    erase_data_in_node(r->left);
+    erase_data_in_node(r->right);
+    r->height = 0;  // for elegance
+    delete r->data;
+}
+
+
+template <class ptr_type, class condition>
+void AVLTree<ptr_type, condition>::erase_data()
+{
+    erase_data_in_node(root);
+}
+
+
+/******************************************************* destructor *******************************************************/
+
+
+template <class ptr_type, class condition>
+void AVLTree<ptr_type, condition>::destructor(AVLNode<ptr_type>*& r)
+{
+    if (r == nullptr)
+    {
+        return;
+    }
+    destructor(r->left);
+    destructor(r->right);
+    delete r;
+}
+
+template <class ptr_type, class condition>
+AVLTree<ptr_type, condition>::~AVLTree()
+{
+    destructor(root);
 }
