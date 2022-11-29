@@ -25,13 +25,13 @@ enum class Comparison
 class wc_players_Condition
 {
 public:
-    Comparison operator()(int id, Player* a)
+    Comparison operator()(Player* a, Player* b)
     {
-        if (id < a->id)
+        if (a->id < b->id)
         {
             return Comparison::LESS_THAN;
         }
-        if (id > a->id)
+        if (a->id > b->id)
         {
             return Comparison::GREATER_THAN;
         }
@@ -83,13 +83,13 @@ private:
     void update_height(AVLNode<ptr_type>*& r);
 
     // - sub function for remove: adds a layer for passing root and result of operation
-    AVLNode<ptr_type>* remove_node(AVLNode<ptr_type>*& r, int key, bool*& result, bool erase);
+    AVLNode<ptr_type>* remove_node(AVLNode<ptr_type>*& r, ptr_type* data, bool*& result, bool erase);
 
     // - sub function for remove: finds a successor for removed node
     AVLNode<ptr_type>* find_successor(AVLNode<ptr_type>* b);
 
     // - sub function for search: adds a layer for passing root and result of operation
-    AVLNode<ptr_type>* search_node(AVLNode<ptr_type>*& r, int key, AVLNode<ptr_type>*& requested);
+    AVLNode<ptr_type>* search_node(AVLNode<ptr_type>*& r, ptr_type* data, AVLNode<ptr_type>*& requested);
 
     // - sub function for search: adds a layer for passing root and result of operation
     void erase_data_in_node(AVLNode<ptr_type>*& r);
@@ -101,7 +101,7 @@ private:
     void inorder_travel(AVLNode<ptr_type>*& r);
 
     // - sub function for get_closest_left: returns father of key object, returns nullptr if not
-    AVLNode<ptr_type>* get_father(AVLNode<ptr_type>* r, int key, AVLNode<ptr_type>*& requested, bool*& flag);
+    AVLNode<ptr_type>* get_father(AVLNode<ptr_type>* r, ptr_type* data, AVLNode<ptr_type>*& requested, bool*& flag);
 
     // - sub function for get_max_node: returns max node for any tree that starts with a given root
     AVLNode<ptr_type>* get_max_node_by_root(AVLNode<ptr_type>* given_root);
@@ -143,30 +143,30 @@ public:
      * returns true - if node is found and removed
      * returns false - if node doesn't exist
      */
-    bool remove(int key);
+    bool remove(ptr_type* data);
 
     /** removes the node that points to 'data' and calls its destructor
      * returns true - if node is found and removed, and data is erased
      * returns false - if node doesn't exist
      */
-    bool remove_and_erase(int key);
+    bool remove_and_erase(ptr_type* data);
 
     /** returns a pointer to node
      *  returns nullptr - if node doesn't exist
      */
-    AVLNode<ptr_type>* search(int key);
+    AVLNode<ptr_type>* search(ptr_type* data);
 
     /**
      * returns a pointer to the closest left neighbor node (smaller then the node)
      * returns nullptr - if doesn't exist
      */
-    AVLNode<ptr_type>* get_closest_left(int key);
+    AVLNode<ptr_type>* get_closest_left(ptr_type* data);
 
     /**
     * returns a pointer to the closest left neighbor node (smaller then the node)
     * returns nullptr - if doesn't exist
     */
-    AVLNode<ptr_type>* get_closest_right(int key);
+    AVLNode<ptr_type>* get_closest_right(ptr_type* data);
 
     // is there any need?
     void inorder();

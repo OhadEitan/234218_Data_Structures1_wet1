@@ -187,6 +187,15 @@ void AVLTree<ptr_type, condition>::update_height(AVLNode<ptr_type>*& r)
 
 
 template <class ptr_type, class condition>
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::insert(ptr_type* data)
+{
+    AVLNode<ptr_type>* r_new_junction = nullptr;
+    root = insert_node(root, data, r_new_junction);
+    return r_new_junction;
+}
+
+
+template <class ptr_type, class condition>
 AVLNode<ptr_type>* AVLTree<ptr_type, condition>::insert_node(AVLNode<ptr_type>*& r, ptr_type* data, AVLNode<ptr_type>*& r_new_junction)
 {
     if (r == nullptr)
@@ -199,7 +208,7 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::insert_node(AVLNode<ptr_type>*&
     else
     {
         condition cond;
-        Comparison result = cond(data->id, r->data);
+        Comparison result = cond(data, r->data);
         if (result == Comparison::LESS_THAN)
         {
             r->left = insert_node(r->left, data, r_new_junction);
@@ -221,27 +230,18 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::insert_node(AVLNode<ptr_type>*&
 }
 
 
-template <class ptr_type, class condition>
-AVLNode<ptr_type>* AVLTree<ptr_type, condition>::insert(ptr_type* data)
-{
-    AVLNode<ptr_type>* r_new_junction = nullptr;
-    root = insert_node(root, data, r_new_junction);
-    return r_new_junction;
-}
-
-
 /******************************************************* search functions *******************************************************/
 
 
 template <class ptr_type, class condition>
-AVLNode<ptr_type>* AVLTree<ptr_type, condition>::search(int key)
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::search(ptr_type* data)
 {
     AVLNode<ptr_type>* requested = nullptr;
-    return search_node(root, key, requested);
+    return search_node(root, data, requested);
 }
 
 template <class ptr_type, class condition>
-AVLNode<ptr_type>* AVLTree<ptr_type, condition>::search_node(AVLNode<ptr_type> *&r, int key, AVLNode<ptr_type> *&requested)
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::search_node(AVLNode<ptr_type> *&r, ptr_type* data, AVLNode<ptr_type> *&requested)
 {
     if (r == nullptr)
     {
@@ -251,10 +251,10 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::search_node(AVLNode<ptr_type> *
     {
         condition cond;
         AVLNode<ptr_type>* temp;
-        Comparison result = cond(key, r->data);
+        Comparison result = cond(data, r->data);
         if (result == Comparison::LESS_THAN)
         {
-            temp = search_node(r->left, key, requested);
+            temp = search_node(r->left, data, requested);
             if (temp != nullptr)
             {
                 return temp;
@@ -263,7 +263,7 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::search_node(AVLNode<ptr_type> *
         }
         if (result == Comparison::GREATER_THAN)
         {
-            temp = search_node(r->right, key, requested);
+            temp = search_node(r->right, data, requested);
             if (temp != nullptr)
             {
                 return temp;
@@ -303,28 +303,35 @@ void AVLTree<ptr_type, condition>::inorder_travel(AVLNode<ptr_type>*& r)
 
 
 template <class ptr_type, class condition>
-AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_closest_left(int key)
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_closest_left(ptr_type* data)
 {
-    AVLNode<ptr_type>* requested = search(key);
+    AVLNode<ptr_type>* requested = search(data);
     if (requested == nullptr)
     {
         return nullptr;
     }
-    if (requested->left == nullptr && requested->right != nullptr)
+    if (requested->left == nullptr)
     {
         condition cond;
         bool* result = new bool();
         *result = false;
-        AVLNode<ptr_type>* father = get_father(root, key, father, result);
-
-        while (cond(key, father->data) == Comparison::LESS_THAN && father->left == nullptr)
+        AVLNode<ptr_type>* father = get_father(root, data, father, result);
+        while (father != nullptr)
         {
-            father = get_father()
+            if (cond(data, father->data) == Comparison::GREATER_THAN)
+            {
+                return father;
+            }
+            if (cond(data, father->data) == Comparison::LESS_THAN && father->left != nullptr)
+            {
+                return get_max_node_by_root(father->left);
+            }
+            *result = false;
+            father = (root, data, father, result);
         }
-        get_father(root, key, father, result);
-        return father;
+        return nullptr;
     }
-    if (requested->left != nullptr && requested->right != nullptr)
+    if (requested->left != nullptr)
     {
         return get_max_node_by_root(requested->left);
     }
@@ -333,7 +340,7 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_closest_left(int key)
 
 
 template <class ptr_type, class condition>
-AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_father(AVLNode<ptr_type>* r, int key, AVLNode<ptr_type>*& requested, bool*& flag)
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_father(AVLNode<ptr_type>* r, ptr_type* data, AVLNode<ptr_type>*& requested, bool*& flag)
 {
     if (r == nullptr)
     {
@@ -343,10 +350,10 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_father(AVLNode<ptr_type>* r
     {
         condition cond;
         AVLNode<ptr_type>* temp;
-        Comparison result = cond(key, r->data);
+        Comparison result = cond(data, r->data);
         if (result == Comparison::LESS_THAN)
         {
-            temp = get_father(r->left, key, requested, flag);
+            temp = get_father(r->left, data, requested, flag);
             if (temp != nullptr)
             {
                 if (*flag == true)
@@ -360,7 +367,7 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_father(AVLNode<ptr_type>* r
         }
         if (result == Comparison::GREATER_THAN)
         {
-            temp = get_father(r->right, key, requested, flag);
+            temp = get_father(r->right, data, requested, flag);
             if (temp != nullptr)
             {
                 if (*flag == true)
@@ -382,9 +389,9 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_father(AVLNode<ptr_type>* r
 
 
 template <class ptr_type, class condition>
-AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_closest_right(int key)
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_closest_right(ptr_type* data)
 {
-    AVLNode<ptr_type>* requested = search(key);
+    AVLNode<ptr_type>* requested = search(data);
     if (requested == nullptr)
     {
         return nullptr;
@@ -394,7 +401,7 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_closest_right(int key)
         AVLNode<ptr_type>* father = nullptr;
         bool* result = new bool();
         *result = false;
-        get_father(root, key, father, result);
+        get_father(root, data, father, result);
         return father;
     }
     return get_min_node_by_root(requested->right);
@@ -405,11 +412,11 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_closest_right(int key)
 
 
 template <class ptr_type, class condition>
-bool AVLTree<ptr_type, condition>::remove(int key)
+bool AVLTree<ptr_type, condition>::remove(ptr_type* data)
 {
     bool* result = new bool();
     *result = false;
-    remove_node(root, key, result, false);
+    remove_node(root, data, result, false);
     bool value = *result;
     delete result;
     if (value == true)
@@ -421,11 +428,11 @@ bool AVLTree<ptr_type, condition>::remove(int key)
 
 
 template <class ptr_type, class condition>
-bool AVLTree<ptr_type, condition>::remove_and_erase(int key)
+bool AVLTree<ptr_type, condition>::remove_and_erase(ptr_type* data)
 {
     bool* result = new bool();
     *result = false;
-    remove_node(root, key, result, true);
+    remove_node(root, data, result, true);
     bool value = *result;
     delete result;
     if (value == true)
@@ -449,7 +456,7 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::find_successor(AVLNode<ptr_type
 
 
 template <class ptr_type, class condition>
-AVLNode<ptr_type>* AVLTree<ptr_type, condition>::remove_node(AVLNode<ptr_type> *&r, int key, bool*& result, bool erase)
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::remove_node(AVLNode<ptr_type> *&r, ptr_type* data, bool*& result, bool erase)
 {
     if (r == nullptr)
     {
@@ -459,7 +466,7 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::remove_node(AVLNode<ptr_type> *
     else
     {
         condition cond;
-        Comparison comp_result = cond(key, r->data);
+        Comparison comp_result = cond(data, r->data);
         if (comp_result == Comparison::EQUAL)
         {
             if (r->right == nullptr && r->left == nullptr) // junction is leaf
@@ -508,7 +515,7 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::remove_node(AVLNode<ptr_type> *
                     delete temp2->data;
                 }
                 r->data = successor->data;
-                remove_node(r->left, successor->data->id, result, false);
+                remove_node(r->left, successor->data, result, false);
                 update_height(r);
                 *result = true;
                 return balance_tree(r);
@@ -516,13 +523,13 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::remove_node(AVLNode<ptr_type> *
         }
         if (comp_result == Comparison::LESS_THAN)
         {
-            r->left = remove_node(r->left, key, result, erase);
+            r->left = remove_node(r->left, data, result, erase);
             update_height(r);
             return balance_tree(r);
         }
         if (comp_result == Comparison::GREATER_THAN)
         {
-            r->right = remove_node(r->right, key, result, erase);
+            r->right = remove_node(r->right, data, result, erase);
             update_height(r);
             return balance_tree(r);
         }
