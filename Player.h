@@ -51,6 +51,38 @@ public:
     }
 };
 
+class ConPichichi {
+public:
+    Comparison operator()(Player* a, Player* b)
+    {
+        if (a->p_goals < b->p_goals)
+        {
+            return Comparison::LESS_THAN;
+        }
+        if (a->p_goals > b->p_goals)
+        {
+            return Comparison::GREATER_THAN;
+        }
+        if (a->p_cards < b->p_cards)
+        {
+            return Comparison::GREATER_THAN;
+
+        }
+        if (a->p_cards > b->p_cards)
+        {
+            return Comparison::LESS_THAN;
+        }
+        if (a->p_id < b->p_id)
+        {
+            return Comparison::LESS_THAN;
+        }
+        if (a->p_id > b->p_id)
+        {
+            return Comparison::GREATER_THAN;
+        }
+    }
+};
+
 
 
 

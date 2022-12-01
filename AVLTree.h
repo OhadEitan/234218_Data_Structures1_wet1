@@ -10,34 +10,6 @@ enum class Comparison
 };
 
 
-// enum class for tree condition
-//enum class Comparison
-//{
-//    GREATER_THAN,
-//    EQUAL,
-//    LESS_THAN
-//};
-
-
-//class ConPlayerId
-//{
-//public:
-//    Comparison operator()(Player& a, Player& b)
-//    {
-//        if (a.)
-//        if ( < b->p_id)
-//        {
-//            return Comparison::LESS_THAN;
-//        }
-//        if (a->p_id > b->p_id)
-//        {
-//            return Comparison::GREATER_THAN;
-//        }
-//        return Comparison::EQUAL;
-//    }
-//};
-
-
 //class for tree nodes
 template <class ptr_type>
 class AVLNode
@@ -48,7 +20,6 @@ public:
     AVLNode* left;
     AVLNode* right;
     AVLNode(ptr_type* data_to_copy) : data(data_to_copy), height(0), left(nullptr), right(nullptr) {}
-    AVLNode() :  data(nullptr), height(0), left(nullptr), right(nullptr) {} ;
 };
 
 
@@ -96,17 +67,20 @@ private:
     // - sub function for destructor: frees all nodes (without freeing the data in every node)
     void destructor(AVLNode<ptr_type>*& root);
 
-    // is there any need?
-    void inorder_travel(AVLNode<ptr_type>*& r);
-
-    // - sub function for get_closest_left: returns father of key object, returns nullptr if not
-    AVLNode<ptr_type>* get_father(AVLNode<ptr_type>* r, ptr_type* data, AVLNode<ptr_type>*& requested, bool*& flag);
+    // - sub function for inorder: adds layer of root
+    void inorder_travel(AVLNode<ptr_type>* r, ptr_type**& elements_by_order, int*& index);
 
     // - sub function for get_max_node: returns max node for any tree that starts with a given root
     AVLNode<ptr_type>* get_max_node_by_root(AVLNode<ptr_type>* given_root);
 
     // - sub function for get_min_node: returns min node for any tree that starts with a given root
     AVLNode<ptr_type>* get_min_node_by_root(AVLNode<ptr_type>* given_root);
+
+    // - sub function for get_closest_left and get_closest_right: returns father of key object, returns nullptr if not
+    AVLNode<ptr_type>* get_father(AVLNode<ptr_type>* r, ptr_type* data);
+
+    // -- sub function for get_father: confirms if passed node to function is father
+    bool check_if_father(AVLNode<ptr_type>* r, ptr_type* data);
 
     AVLNode<ptr_type>* root;
     int num_of_nodes;
@@ -116,7 +90,6 @@ private:
     static const int UNBALANCED_NEGATIVE_BF = -2;
 
 public:
-
     // constructor
     AVLTree() : root(nullptr), num_of_nodes(0) {}
 
@@ -167,8 +140,8 @@ public:
     */
     AVLNode<ptr_type>* get_closest_right(ptr_type* data);
 
-    // is there any need?
-    void inorder();
+    // returns an array with pointers to nodes' data, by order of template condition
+    ptr_type** inorder();
 
     /** calls for the destructor of the data pointed to at every node
      * does not remove the node itself (that's the destructors job)
@@ -179,8 +152,6 @@ public:
     ~AVLTree();
 
 };
-
-
 
 
 /******************************************************* tree details functions *******************************************************/
@@ -304,7 +275,7 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::balance_tree(AVLNode<ptr_type>*
     }
     if (bf == UNBALANCED_NEGATIVE_BF)
     {
-        if (get_bf(r->right) >= 0)
+        if (get_bf(r->right) <= 0)
         {
             return make_RR_rotation(r);
         }
@@ -408,6 +379,7 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::insert_node(AVLNode<ptr_type>*&
             r_new_junction = nullptr;
             return r;
         }
+        return r;
     }
 }
 
@@ -458,29 +430,7 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::search_node(AVLNode<ptr_type> *
             return r;
         }
     }
-}
-
-
-/******************************************************* travel functions *******************************************************/
-
-
-template <class ptr_type, class condition>
-void AVLTree<ptr_type, condition>::inorder()
-{
-    inorder_travel(root);
-}
-
-
-template <class ptr_type, class condition>
-void AVLTree<ptr_type, condition>::inorder_travel(AVLNode<ptr_type>*& r)
-{
-    if (r == nullptr)
-    {
-        return;
-    }
-    inorder_travel(r->left);
-    // do something with data
-    inorder_travel(r->right);
+    return nullptr;
 }
 
 
@@ -495,21 +445,18 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_closest_left(ptr_type* data
     if (requested->left == nullptr)
     {
         condition cond;
-        bool* result = new bool();
-        *result = false;
-        AVLNode<ptr_type>* father = get_father(root, data, father, result);
+        AVLNode<ptr_type>* father = get_father(root, requested->data);
+        Comparison result_cond = cond(data, father->data);
         while (father != nullptr)
         {
-            if (cond(data, father->data) == Comparison::GREATER_THAN)
+            if (result_cond == Comparison::GREATER_THAN)
             {
                 return father;
             }
-            if (cond(data, father->data) == Comparison::LESS_THAN && father->left != nullptr)
+            if (result_cond == Comparison::LESS_THAN)
             {
-                return get_max_node_by_root(father->left);
+                father = get_father(root, father->data);
             }
-            *result = false;
-            father = (root, data, father, result);
         }
         return nullptr;
     }
@@ -517,56 +464,7 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_closest_left(ptr_type* data
     {
         return get_max_node_by_root(requested->left);
     }
-
-}
-
-
-template <class ptr_type, class condition>
-AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_father(AVLNode<ptr_type>* r, ptr_type* data, AVLNode<ptr_type>*& requested, bool*& flag)
-{
-    if (r == nullptr)
-    {
-        return nullptr;
-    }
-    else
-    {
-        condition cond;
-        AVLNode<ptr_type>* temp;
-        Comparison result = cond(data, r->data);
-        if (result == Comparison::LESS_THAN)
-        {
-            temp = get_father(r->left, data, requested, flag);
-            if (temp != nullptr)
-            {
-                if (*flag == true)
-                {
-                    requested = r;
-                    *flag = false;
-                }
-                return temp;
-            }
-            return nullptr;
-        }
-        if (result == Comparison::GREATER_THAN)
-        {
-            temp = get_father(r->right, data, requested, flag);
-            if (temp != nullptr)
-            {
-                if (*flag == true)
-                {
-                    requested = r;
-                    *flag = false;
-                }
-                return temp;
-            }
-            return nullptr;
-        }
-        if (result == Comparison::EQUAL)
-        {
-            *flag = true;
-            return r;
-        }
-    }
+    return nullptr;
 }
 
 
@@ -580,13 +478,107 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_closest_right(ptr_type* dat
     }
     if (requested->right == nullptr)
     {
-        AVLNode<ptr_type>* father = nullptr;
-        bool* result = new bool();
-        *result = false;
-        get_father(root, data, father, result);
-        return father;
+        condition cond;
+        AVLNode<ptr_type>* father = get_father(root, requested->data);
+        while (father != nullptr)
+        {
+            if (cond(data, father->data) == Comparison::LESS_THAN)
+            {
+                return father;
+            }
+            if (cond(data, father->data) == Comparison::GREATER_THAN)
+            {
+                father = get_father(root, father->data);
+            }
+        }
+        return nullptr;
     }
-    return get_min_node_by_root(requested->right);
+    if (requested->right != nullptr)
+    {
+        return get_min_node_by_root(requested->right);
+    }
+    return nullptr;
+}
+
+
+template <class ptr_type, class condition>
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_father(AVLNode<ptr_type>* r, ptr_type* data)
+{
+    if (r == nullptr || data == root->data)
+    {
+        return nullptr;
+    }
+    else
+    {
+        condition cond;
+        if (check_if_father(r, data))
+        {
+            return r;
+        }
+        if (cond(data, r->data) == Comparison::LESS_THAN)
+        {
+            return get_father(r->left, data);
+        }
+        if (cond(data, r->data) == Comparison::GREATER_THAN)
+        {
+            return get_father(r->right, data);
+        }
+    }
+    return nullptr;
+}
+
+
+template <class ptr_type, class condition>
+bool AVLTree<ptr_type, condition>::check_if_father(AVLNode<ptr_type>* r, ptr_type* data)
+{
+    condition cond;
+    if (r->right != nullptr)
+    {
+        if (cond(data, r->right->data) == Comparison::EQUAL)
+        {
+            return true;
+        }
+    }
+    if (r->left != nullptr)
+    {
+        if (cond(data, r->left->data) == Comparison::EQUAL)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/******************************************************* travel functions *******************************************************/
+
+
+template <class ptr_type, class condition>
+ptr_type** AVLTree<ptr_type, condition>::inorder()
+{
+    if (root == nullptr)
+    {
+        return nullptr;
+    }
+    ptr_type** elements_by_order = new ptr_type*[num_of_nodes];
+    int* i = new int(0);
+    inorder_travel(root, elements_by_order, i);
+    delete i;
+    return elements_by_order;
+}
+
+
+template <class ptr_type, class condition>
+void AVLTree<ptr_type, condition>::inorder_travel(AVLNode<ptr_type>* r, ptr_type**& elements_by_order, int*& index)
+{
+    if (r == nullptr)
+    {
+        return;
+    }
+    inorder_travel(r->left, elements_by_order, index);
+    elements_by_order[*index] = r->data;
+    (*index)++;
+    inorder_travel(r->right, elements_by_order, index);
 }
 
 
@@ -716,6 +708,7 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::remove_node(AVLNode<ptr_type> *
             return balance_tree(r);
         }
     }
+    return nullptr;
 }
 
 
@@ -760,6 +753,5 @@ AVLTree<ptr_type, condition>::~AVLTree()
 {
     destructor(root);
 }
-
 
 #endif //AVL_AVLTREE_H

@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_executable(
         wet1_new
-        main23a1.cpp
+        main.cpp
         wet1util.h
         Player.cpp
         Player.h

@@ -15,7 +15,7 @@
 class Team {
 public:
     AVLTree<Player, ConPId > t_players; // this one belong to him
-    AVLTree<Player, ConPId > t_pichichi; // this one belong to him
+    AVLTree<Player, ConPichichi > t_pichichi; // this one belong to him
     int team_id;
     int t_total_players;
     int t_score;

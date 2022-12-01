@@ -24,7 +24,7 @@ class world_cup_t {
 private:
     AVLTree<Team, ConTId > wc_teams;
     AVLTree<Player, ConPId> wc_players;
-    AVLTree<Player, ConPId > wc_pichichi;
+    AVLTree<Player, ConPichichi > wc_pichichi;
     AVLTree<Team, ConTId > wc_capable;
     int wc_total_players;
     Player* wc_pichichi_out;
