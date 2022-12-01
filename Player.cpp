@@ -74,3 +74,4 @@ int  Player::calc_closest(Player*& p1, Player*& p2) {
     }
 }
 
+

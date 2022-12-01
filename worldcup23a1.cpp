@@ -11,9 +11,7 @@ world_cup_t::~world_cup_t()
 //    // TODO: Your code goes here
     this->wc_teams.AVLTree<Team, ConTId>::erase_data();
     this->wc_players.AVLTree<Player, ConPId>::erase_data();
-    if (wc_pichichi_out != nullptr) {
-        delete wc_pichichi_out;
-    }
+
 }
 
 StatusType world_cup_t::add_team(int teamId, int points)
@@ -119,22 +117,26 @@ StatusType world_cup_t::add_player(int playerId, int teamId, int gamesPlayed,
         specificTeam->data->t_is_capable = true;
         p3->p_pwc_capable = this->wc_capable.insert(specificTeam->data);
     }
-
-
-//    Player* p_left = wc_pichichi.get_closest_left(p3)->data;
-//    Player* p_right = wc_pichichi.get_closest_right(p3)->data;
-//    p3->p_pcloset_lower = p_left;
-//    p3->p_pcloset_greater = p_right;
-//    if (p_left != nullptr)
-//    {
-//        p_left->p_pcloset_lower = p_left->p_pcloset_greater;
-//        p_left->p_pcloset_greater =  p3;
-//    }
-//    if (p_right != nullptr)
-//    {
-//        p_right->p_pcloset_lower = p3;
-//        p_right->p_pcloset_greater = p_right->p_pcloset_greater;
-//    }
+    Player *p_left = nullptr;
+    Player *p_right = nullptr;
+    if (wc_pichichi.get_closest_left(p3) != nullptr) {
+        p_left = wc_pichichi.get_closest_left(p3)->data;
+    }
+    if (wc_pichichi.get_closest_right(p3) != nullptr) {
+         p_right = wc_pichichi.get_closest_right(p3)->data;
+    }
+    p3->p_pcloset_lower = p_left;
+    p3->p_pcloset_greater = p_right;
+    if (p_left != nullptr)
+    {
+        p_left->p_pcloset_lower = p_left->p_pcloset_greater;
+        p_left->p_pcloset_greater =  p3;
+    }
+    if (p_right != nullptr)
+    {
+        p_right->p_pcloset_lower = p3;
+        p_right->p_pcloset_greater = p_right->p_pcloset_greater;
+    }
     return StatusType::SUCCESS;
 }
 
@@ -146,8 +148,8 @@ StatusType world_cup_t::remove_player(int playerId)
         return StatusType::INVALID_INPUT;
     }
     AVLNode<Player>* p1;
-    Player p2 = Player(playerId);
-    p1 = this->wc_players.search(&p2);
+    Player* p2 = new Player(playerId);
+    p1 = this->wc_players.search(p2);
     if (p1 == nullptr) // team isnt exist
     {
         return StatusType::FAILURE;
@@ -158,27 +160,55 @@ StatusType world_cup_t::remove_player(int playerId)
 
     try
     {
-        //this->wc_teams.remove_and_erase(teamId);
         //// update closest
-//        Player* p_left = wc_pichichi.get_closest_left(specific_player)->data;
-//        Player* p_right = wc_pichichi.get_closest_right(specific_player)->data;
-//        specific_player->p_pcloset_lower = nullptr;
-//        specific_player->p_pcloset_greater = nullptr;
-//        if (p_left != nullptr)
-//        {
-//            p_left->p_pcloset_lower = p_left->p_pcloset_lower;
-//            p_left->p_pcloset_greater =  p_right;
-//        }
-//        if (p_right != nullptr)
-//        {
-//            p_right->p_pcloset_lower = p_left;
-//            p_right->p_pcloset_greater =  p_left->p_pcloset_greater;
-//        }
+
+
+        Player *p_left = nullptr;
+        Player *p_right = nullptr;
+        if (wc_pichichi.get_closest_left(specific_player) != nullptr) {
+            p_left = wc_pichichi.get_closest_left(specific_player)->data;
+        }
+        if (wc_pichichi.get_closest_right(specific_player) != nullptr)
+        {
+            p_right = wc_pichichi.get_closest_right(specific_player)->data;
+        }
+        specific_player->p_pcloset_lower = nullptr;
+        specific_player->p_pcloset_greater = nullptr;
+        if (p_left != nullptr)
+        {
+            p_left->p_pcloset_lower = p_left->p_pcloset_lower;
+            p_left->p_pcloset_greater =  p_right;
+        }
+        if (p_right != nullptr)
+        {
+            p_right->p_pcloset_lower = p_left;
+            p_right->p_pcloset_greater =  p_right->p_pcloset_greater;
+        }
+        /// update for the player team
+        int player_team = specific_player->p_teamId;
+        Team* t2 = new Team(player_team,0);
+
+        AVLNode<Team> *t1 = this->wc_teams.search(t2);
+        t1->data->t_total_players--;
+        if (specific_player->p_goal_keeper) {
+            t1->data->t_gk_counter--;
+        }
+        if (t1->data->t_total_players < 11 && t1->data->t_gk_counter <= 0) {
+            t1->data->t_is_capable = false;
+            this->wc_capable.remove(t2);
+
+        }
+        t1->data->t_score -= (specific_player->p_goals - p1->data->p_cards);
+        t1->data->t_players.remove(specific_player);
+        t1->data->t_pichichi.remove(specific_player);
+        if (t1->data->t_pichichi.get_max_node() != nullptr) {
+            t1->data->t_pichichi_out = t1->data->t_pichichi.get_max_node()->data; ///// here find team pichichi out///
+        }
+
 
         /// update for wc
-
-        this->wc_players.remove(specific_player);
         this->wc_pichichi.remove(specific_player);
+        this->wc_players.remove(specific_player);
         this->wc_total_players--;
 
         if (this->wc_pichichi.get_max_node() != nullptr) {
@@ -186,26 +216,6 @@ StatusType world_cup_t::remove_player(int playerId)
         }
         /// update closest for player 2 former neighbors
 
-        /// update for the player team
-        int player_team = specific_player->p_teamId;
-        Team t2 = Team(player_team,0);
-
-        AVLNode<Team> *t1 = this->wc_teams.search(&t2);
-        t1->data->t_total_players--;
-        if (specific_player->p_goal_keeper) {
-            t1->data->t_gk_counter--;
-        }
-        if (t1->data->t_total_players < 11 && t1->data->t_gk_counter <= 0) {
-            t1->data->t_is_capable = false;
-            this->wc_capable.remove(&t2);
-
-        }
-        t1->data->t_score -= (specific_player->p_goals - p1->data->p_cards);
-        t1->data->t_players.remove(specific_player);
-        t1->data->t_pichichi.remove(specific_player->p_pt_pichichi->data);
-        if (this->wc_pichichi.get_max_node() != nullptr) {
-            t1->data->t_pichichi_out = t1->data->t_pichichi.get_max_node()->data; ///// here find team pichichi out///
-        }
 
         specific_player->~Player();
 
@@ -226,8 +236,8 @@ StatusType world_cup_t::update_player_stats(int playerId, int gamesPlayed,
         return StatusType::INVALID_INPUT;
     }
     AVLNode<Player>* p1;
-    Player p2 = Player(playerId);
-    p1 = this->wc_players.search(&p2);
+    Player* p2 = new Player(playerId);
+    p1 = this->wc_players.search(p2);
     if (p1 == nullptr) // team isnt exist
     {
         return StatusType::FAILURE;
@@ -235,24 +245,35 @@ StatusType world_cup_t::update_player_stats(int playerId, int gamesPlayed,
     /// player exist lets update him
     AVLNode<Team>* t1 = p1->data->p_pteam;
     /// wc closest need to be update before updating the player
-//    Player* p_left = wc_pichichi.get_closest_left(p1->data)->data;
-//    Player* p_right = wc_pichichi.get_closest_right(p1->data)->data;
-//    p1->data->p_pcloset_lower = nullptr;
-//    p1->data->p_pcloset_greater = nullptr;
-//    if (p_left != nullptr)
-//    {
-//        p_left->p_pcloset_lower = p_left->p_pcloset_lower;
-//        p_left->p_pcloset_greater =  p_right;
-//    }
-//    if (p_right != nullptr)
-//    {
-//        p_right->p_pcloset_lower = p_left;
-//        p_right->p_pcloset_greater =  p_left->p_pcloset_greater;
-//    }
+
+
+    Player *p_left = nullptr;
+    Player *p_right = nullptr;
+    if (wc_pichichi.get_closest_left(p2) != nullptr) {
+        p_left = wc_pichichi.get_closest_left(p2)->data;
+    }
+    if (wc_pichichi.get_closest_right(p2) != nullptr)
+    {
+        p_right = wc_pichichi.get_closest_right(p2)->data;
+    }
+    p2->p_pcloset_lower = nullptr;
+    p2->p_pcloset_greater = nullptr;
+    if (p_left != nullptr)
+    {
+        p_left->p_pcloset_lower = p_left->p_pcloset_lower;
+        p_left->p_pcloset_greater =  p_right;
+    }
+    if (p_right != nullptr)
+    {
+        p_right->p_pcloset_lower = p_left;
+        p_right->p_pcloset_greater =  p_right->p_pcloset_greater;
+    }
+
+
 
     /// we shold remove both fro, pichichi wc and team
-    this->wc_pichichi.remove(&p2);
-    t1->data->t_pichichi.remove(&p2);
+    this->wc_pichichi.remove(p2);
+    t1->data->t_pichichi.remove(p2);
 
     //// update player stats
     p1->data->p_cards += cardsReceived;
@@ -269,20 +290,27 @@ StatusType world_cup_t::update_player_stats(int playerId, int gamesPlayed,
     this->wc_pichichi_out = this->wc_pichichi.get_max_node()->data;
 
     /// wc closest need to be update after player stats were update
-//    p_left = wc_pichichi.get_closest_left(p1->data)->data;
-//    p_right = wc_pichichi.get_closest_right(p1->data)->data;
-//    p1->data->p_pcloset_lower = p_left;
-//    p1->data->p_pcloset_greater = p_right;
-//    if (p_left != nullptr)
-//    {
-//        p_left->p_pcloset_lower = p_left->p_pcloset_greater;
-//        p_left->p_pcloset_greater =  p1->data;
-//    }
-//    if (p_right != nullptr)
-//    {
-//        p_right->p_pcloset_lower = p1->data;
-//        p_right->p_pcloset_greater = p_right->p_pcloset_greater;
-//    }
+    p_left = nullptr;
+    p_right = nullptr;
+    if (wc_pichichi.get_closest_left(p2) != nullptr) {
+        p_left = wc_pichichi.get_closest_left(p2)->data;
+    }
+    if (wc_pichichi.get_closest_right(p2) != nullptr) {
+        p_right = wc_pichichi.get_closest_right(p2)->data;
+    }
+    p2->p_pcloset_lower = p_left;
+    p2->p_pcloset_greater = p_right;
+    if (p_left != nullptr)
+    {
+        p_left->p_pcloset_lower = p_left->p_pcloset_greater;
+        p_left->p_pcloset_greater =  p2;
+    }
+    if (p_right != nullptr)
+    {
+        p_right->p_pcloset_lower = p2;
+        p_right->p_pcloset_greater = p_right->p_pcloset_greater;
+    }
+
 
     /// team pichichi AVL need to be update
     // TODO: Your code goes here
@@ -363,9 +391,15 @@ output_t<int> world_cup_t::get_team_points(int teamId)
 
 StatusType world_cup_t::unite_teams(int teamId1, int teamId2, int newTeamId)
 {
-    if (teamId1<=0 || teamId2< 0 || teamId1==teamId2 || newTeamId<=0)
+    if (teamId1<=0 || teamId2<= 0 || teamId1==teamId2 || newTeamId<=0)
     {
         return StatusType::INVALID_INPUT;
+    }
+    Team t_check = Team(newTeamId,0);
+    AVLNode<Team>* node_check = this->wc_teams.search(&t_check);
+    if (node_check != nullptr && newTeamId != teamId1 && newTeamId != teamId2 )
+    {
+        return StatusType::FAILURE;
     }
     Team t3 = Team(teamId1,0);
     Team t4 = Team(teamId2,0);
@@ -379,50 +413,59 @@ StatusType world_cup_t::unite_teams(int teamId1, int teamId2, int newTeamId)
     try {
         // both team players get their gp stats update
         int size_t1 = t1->data->t_total_players;
-        Player **pointer_array1 = t1->data->t_players.inorder();
-        Player* t1_array = *pointer_array1;
+        Player **pointer_array1_byId = t1->data->t_players.inorder();
         for (int i = 0; i < size_t1; i++) {
-            t1_array[i].p_games_played + t1->data->t_games_played;
+            pointer_array1_byId[i]->p_games_played += t1->data->t_games_played;
+            pointer_array1_byId[i]->p_teamId = newTeamId;
         }
         int size_t2 = t2->data->t_total_players;
-        Player **pointer_array2 = t2->data->t_players.inorder();
-        Player* t2_array = *pointer_array2;
+        Player **pointer_array2_byId = t2->data->t_players.inorder();
         for (int i = 0; i < size_t2; i++) {
-            t2_array[i].p_games_played + t2->data->t_games_played;
+            pointer_array2_byId[i]->p_games_played += t2->data->t_games_played;
+            pointer_array2_byId[i]->p_teamId = newTeamId;
+
         }
-        world_cup_t::add_team(newTeamId, t1->data->t_points + t2->data->t_points);
-        Team t5 = Team(newTeamId,0);
-        AVLNode<Team> *new_team = this->wc_teams.search(&t5);
+        Team* t5 =  new Team(newTeamId,t1->data->t_points+t2->data->t_points);
+        AVLNode<Team> *new_team = this->wc_teams.search(t5);
         if (teamId1 == newTeamId)
         {
-             t5 = Team(newTeamId, t1->data->t_points);
+             *t5 = Team(newTeamId, t1->data->t_points);
              new_team = t1;
         }
         else
         {
             if (teamId2 == newTeamId) {
-                 t5 = Team(newTeamId, t2->data->t_points);
+                 *t5 = Team(newTeamId, t2->data->t_points);
                  new_team = t2;
             }
         }
         if (new_team == nullptr)
         {
-            this->wc_teams.insert(&t5);
-            new_team = this->wc_teams.search(&t5);
+            this->wc_teams.insert(t5);
+            new_team = this->wc_teams.search(t5);
         }
-        new_team = this->wc_teams.search(&t5);
+        new_team = this->wc_teams.search(t5);
         new_team->data->t_score = t1->data->t_score + t2->data->t_score;
         new_team->data->t_total_players = t1->data->t_total_players + t2->data->t_total_players;
         new_team->data->t_gk_counter = t1->data->t_gk_counter + t2->data->t_gk_counter;
         if (t1->data->t_is_capable || t2->data->t_is_capable) {
             new_team->data->t_is_capable = true;
         }
-        /// now we need to merege those two arrays
-        //    Player *unite_array = merge(p_array1, p_array2);
-        //     t_new->data->t_players.array2AVL(unite_array, teamId1); /// dont think will work need to be fixed
-        //    t_new->data->t_pichichi.array2AVL(unite_array, teamId1); /// dont think will work need to be fixed
+        /// now we need to merege those two arrays by id
+        Player **unite_array_byId = mergeArrays<ConPId>(pointer_array1_byId, pointer_array2_byId, size_t1,size_t2);
+        /// now we need to merege those two arrays by pichichi
+        Player **pointer_array1_by_pichichi = t1->data->t_pichichi.inorder();
+        Player **pointer_array2_by_pichichi = t2->data->t_pichichi.inorder();
+        Player **unite_array_by_pichichi = mergeArrays<ConPichichi>(pointer_array1_byId, pointer_array2_byId, size_t1,size_t2);
+        /// creating AVLs from sorted array in O(n) like algorithm shown in tutorials
+        new_team->data->t_players.build_from_array(unite_array_byId, size_t1+size_t2);
+        new_team->data->t_pichichi.build_from_array(unite_array_by_pichichi,size_t1+size_t2);
+
+        if (new_team->data->t_pichichi.get_max_node() != nullptr) {
+                new_team->data->t_pichichi_out = new_team->data->t_pichichi.get_max_node()->data;
+            }
         new_team->data->t_games_played = 0; /// isnt necessary think constructor will do it need to check this while debugging
-      //  new_team->data->t_pichichi_out = new_team->data->t_pichichi.get_max_node()->data;
+        new_team->data->t_points = t1->data->t_points+t2->data->t_points;
         if (new_team->data->t_is_capable) {
             this->wc_capable.insert(new_team->data);
             //// for  eacch player update the pointer to capable team
@@ -430,20 +473,28 @@ StatusType world_cup_t::unite_teams(int teamId1, int teamId2, int newTeamId)
         }
         if (teamId1 == newTeamId)
         {
-            this->wc_teams.remove_and_erase(&t4);
+            this->wc_teams.remove(&t4);
         }
         else {
             if (teamId2 == newTeamId)
             {
-                this->wc_teams.remove_and_erase(&t3);
+                this->wc_teams.remove(&t3);
             }
             else{
-                this->wc_teams.remove_and_erase(&t3);
-                this->wc_teams.remove_and_erase(&t4);
+                this->wc_teams.remove(&t3);
+                this->wc_teams.remove(&t4);
             }
         }
+//        delete pointer_array1_byId;
+//        delete pointer_array2_byId;
+//        delete pointer_array1_by_pichichi;
+//        delete pointer_array2_by_pichichi;
+//        delete unite_array_byId;
+//        delete unite_array_by_pichichi;
 
     }
+
+
     catch (...)
     {
         return StatusType::FAILURE;
@@ -520,6 +571,9 @@ StatusType world_cup_t::get_all_players(int teamId, int *const output) {
 
             Player **pointer_array = t1->data->t_pichichi.inorder();
             int size = t1->data->t_total_players;
+
+
+
             for (int i = 0; i < size ; ++i) {
                 output[i]  = pointer_array[i]->p_id;
             }
@@ -580,6 +634,16 @@ output_t<int> world_cup_t::get_closest_player(int playerId, int teamId)
 
 output_t<int> world_cup_t::knockout_winner(int minTeamId, int maxTeamId)
 {
+    if (minTeamId < 0 || minTeamId > maxTeamId || maxTeamId<0) {
+        return StatusType::INVALID_INPUT;
+    }
+   Team t2 = Team(minTeamId,0);
+   AVLNode<Team> *t1 = this->wc_capable.search(&t2);
+   if (t1 == nullptr)
+   {
+       t1 = this->wc_capable.insert(&t2);
+   }
+
     // TODO: Your code goes here
     return 2;
 }

@@ -13,4 +13,4 @@ add_executable(
         Team.cpp
         Team.h
         worldcup23a1.h
-        worldcup23a1.cpp)
+        worldcup23a1.cpp merge.h)

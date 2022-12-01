@@ -18,6 +18,7 @@
 #include "wet1util.h"
 #include "Team.h"
 #include "AVLTree.h"
+#include "merge.h"
 #pragma once
 
 class world_cup_t {
