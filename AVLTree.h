@@ -82,8 +82,8 @@ private:
     // -- sub function for get_father: confirms if passed node to function is father
     bool check_if_father(AVLNode<ptr_type>* r, ptr_type* data);
 
-    // -- sub function for constructor with soted array: constructs the tree from array
-    AVLNode<ptr_type>* construct_tree_from_array(ptr_type** array, int start, int end);
+    // -- sub function for build_from_array: constructs the tree from array
+    AVLNode<ptr_type>* build_tree_from_array(ptr_type** array, int start, int end);
 
     AVLNode<ptr_type>* root;
     int num_of_nodes;
@@ -96,8 +96,8 @@ public:
     // constructor
     AVLTree() : root(nullptr), num_of_nodes(0) {}
 
-    // constructor from sorted array without duplicates
-    AVLTree(ptr_type** data_array, int size);
+    // builds tree from sorted array without duplicates
+    void build_from_array(ptr_type** data_array, int size);
 
     // returns how many nodes the tree consists
     int get_num_of_nodes();
@@ -160,23 +160,23 @@ public:
 };
 
 
-/******************************************************* constructor functions *******************************************************/
+/******************************************************* build tree from array functions *******************************************************/
 
 
 template <class ptr_type, class condition>
-AVLTree<ptr_type, condition>::AVLTree(ptr_type** data_array, int size) : root(nullptr), num_of_nodes(0)
+void AVLTree<ptr_type, condition>::build_from_array(ptr_type **data_array, int size)
 {
-    if (size < 1 || data_array == nullptr)
+    if (size < 1 || data_array == nullptr || root != nullptr)
     {
         return;
     }
-    root = construct_tree_from_array(data_array, 0, size-1);
+    root = build_tree_from_array(data_array, 0, size-1);
     num_of_nodes = size;
 }
 
 
 template <class ptr_type, class condition>
-AVLNode<ptr_type>* AVLTree<ptr_type, condition>::construct_tree_from_array(ptr_type** array, int start, int end)
+AVLNode<ptr_type>* AVLTree<ptr_type, condition>::build_tree_from_array(ptr_type** array, int start, int end)
 {
     if (start > end)
     {
@@ -184,8 +184,8 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::construct_tree_from_array(ptr_t
     }
     int mid = (start + end) / 2;
     AVLNode<ptr_type> *r = new AVLNode<ptr_type>(array[mid]);
-    r->left = construct_tree_from_array(array, start, mid - 1);
-    r->right = construct_tree_from_array(array, mid + 1, end);
+    r->left = build_tree_from_array(array, start, mid - 1);
+    r->right = build_tree_from_array(array, mid + 1, end);
     update_height(r);
     return r;
 }
