@@ -483,9 +483,9 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_closest_left(ptr_type* data
     {
         condition cond;
         AVLNode<ptr_type>* father = get_father(root, requested->data);
-        Comparison result_cond = cond(data, father->data);
         while (father != nullptr)
         {
+            Comparison result_cond = cond(data, father->data);
             if (result_cond == Comparison::GREATER_THAN)
             {
                 return father;
@@ -519,11 +519,12 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::get_closest_right(ptr_type* dat
         AVLNode<ptr_type>* father = get_father(root, requested->data);
         while (father != nullptr)
         {
-            if (cond(data, father->data) == Comparison::LESS_THAN)
+            Comparison result_cond = cond(data, father->data);
+            if (result_cond == Comparison::LESS_THAN)
             {
                 return father;
             }
-            if (cond(data, father->data) == Comparison::GREATER_THAN)
+            if (result_cond == Comparison::GREATER_THAN)
             {
                 father = get_father(root, father->data);
             }
