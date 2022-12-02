@@ -79,7 +79,7 @@ StatusType world_cup_t::add_player(int playerId, int teamId, int gamesPlayed,
     }
 
     Player *p3 = new Player(playerId, teamId, goals, cards,
-                                gamesPlayed - t1->data->t_games_played, goalKeeper);
+                            gamesPlayed - t1->data->t_games_played, goalKeeper);
 
     AVLNode<Player>* p1;
     p1 = this->wc_players.search(p3);
@@ -123,7 +123,7 @@ StatusType world_cup_t::add_player(int playerId, int teamId, int gamesPlayed,
         p_left = wc_pichichi.get_closest_left(p3)->data;
     }
     if (wc_pichichi.get_closest_right(p3) != nullptr) {
-         p_right = wc_pichichi.get_closest_right(p3)->data;
+        p_right = wc_pichichi.get_closest_right(p3)->data;
     }
     p3->p_pcloset_lower = p_left;
     p3->p_pcloset_greater = p_right;
@@ -429,14 +429,14 @@ StatusType world_cup_t::unite_teams(int teamId1, int teamId2, int newTeamId)
         AVLNode<Team> *new_team = this->wc_teams.search(t5);
         if (teamId1 == newTeamId)
         {
-             *t5 = Team(newTeamId, t1->data->t_points);
-             new_team = t1;
+            *t5 = Team(newTeamId, t1->data->t_points);
+            new_team = t1;
         }
         else
         {
             if (teamId2 == newTeamId) {
-                 *t5 = Team(newTeamId, t2->data->t_points);
-                 new_team = t2;
+                *t5 = Team(newTeamId, t2->data->t_points);
+                new_team = t2;
             }
         }
         if (new_team == nullptr)
@@ -456,14 +456,14 @@ StatusType world_cup_t::unite_teams(int teamId1, int teamId2, int newTeamId)
         /// now we need to merege those two arrays by pichichi
         Player **pointer_array1_by_pichichi = t1->data->t_pichichi.inorder();
         Player **pointer_array2_by_pichichi = t2->data->t_pichichi.inorder();
-        Player **unite_array_by_pichichi = mergeArrays<ConPichichi>(pointer_array1_byId, pointer_array2_byId, size_t1,size_t2);
+        Player **unite_array_by_pichichi = mergeArrays<ConPichichi>(pointer_array1_by_pichichi, pointer_array2_by_pichichi, size_t1,size_t2);
         /// creating AVLs from sorted array in O(n) like algorithm shown in tutorials
         new_team->data->t_players.build_from_array(unite_array_byId, size_t1+size_t2);
         new_team->data->t_pichichi.build_from_array(unite_array_by_pichichi,size_t1+size_t2);
 
         if (new_team->data->t_pichichi.get_max_node() != nullptr) {
-                new_team->data->t_pichichi_out = new_team->data->t_pichichi.get_max_node()->data;
-            }
+            new_team->data->t_pichichi_out = new_team->data->t_pichichi.get_max_node()->data;
+        }
         new_team->data->t_games_played = 0; /// isnt necessary think constructor will do it need to check this while debugging
         new_team->data->t_points = t1->data->t_points+t2->data->t_points;
         if (new_team->data->t_is_capable) {
@@ -592,7 +592,7 @@ StatusType world_cup_t::get_all_players(int teamId, int *const output) {
             Player **pointer_array = wc_pichichi.inorder();
             int size = wc_total_players;
             for (int i = 0; i < size ; ++i) {
-                    output[i]  = pointer_array[i]->p_id;
+                output[i]  = pointer_array[i]->p_id;
             }
             ///// what should I do here?
             delete[] pointer_array;
@@ -637,16 +637,15 @@ output_t<int> world_cup_t::knockout_winner(int minTeamId, int maxTeamId)
     if (minTeamId < 0 || minTeamId > maxTeamId || maxTeamId<0) {
         return StatusType::INVALID_INPUT;
     }
-   Team t2 = Team(minTeamId,0);
-   AVLNode<Team> *t1 = this->wc_capable.search(&t2);
-   if (t1 == nullptr)
-   {
-       t1 = this->wc_capable.insert(&t2);
-   }
+    Team t2 = Team(minTeamId,0);
+    AVLNode<Team> *t1 = this->wc_capable.search(&t2);
+    if (t1 == nullptr)
+    {
+        t1 = this->wc_capable.insert(&t2);
+    }
 
     // TODO: Your code goes here
     return 2;
 }
-
 
 
