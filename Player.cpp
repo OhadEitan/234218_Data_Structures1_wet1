@@ -40,13 +40,13 @@ int getClosest(int val1, int val2,int target)
 }
 
 int  Player::calc_closest(Player*& p1, Player*& p2) {
-    if (this->p_goals- p1->p_goals < p2->p_goals-this->p_goals)
+    if (abs(this->p_goals- p1->p_goals) < abs(p2->p_goals-this->p_goals))
     {
         return  p1->p_id;
     }
     else
     {
-        if (this->p_goals- p1->p_goals > p2->p_goals-this->p_goals)
+        if (abs(this->p_goals- p1->p_goals) > abs(p2->p_goals-this->p_goals))
         {
             return  p2->p_id;
         }

@@ -658,7 +658,7 @@ output_t<int> world_cup_t::get_closest_player(int playerId, int teamId)
         return output_t<int>(StatusType::FAILURE);
     }
     Player* p_lower = specif_player->data->p_pcloset_lower;
-    Player* p_greater = specif_player->data->p_pcloset_lower;
+    Player* p_greater = specif_player->data->p_pcloset_greater;
 
     int player_closest = specif_player->data->calc_closest(p_lower,p_greater );
     return output_t<int>(player_closest);
