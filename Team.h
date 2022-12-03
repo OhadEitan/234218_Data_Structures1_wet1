@@ -6,6 +6,8 @@
 #define WET1_TEAM_H
 #include "Player.h"
 #include "AVLTree.h"
+#include "LinkedList.h"
+
 #pragma once
 
 #include <memory>
@@ -16,6 +18,7 @@ class Team {
 public:
     AVLTree<Player, ConPId > t_players; // this one belong to him
     AVLTree<Player, ConPichichi > t_pichichi; // this one belong to him
+    LLNode<Team>* p_twc_list_capable;
     int team_id;
     int t_total_players;
     int t_score;
@@ -25,7 +28,10 @@ public:
     int t_gk_counter;
     bool t_is_capable;
 
+    Team() = default;
     Team(int teamId,int points);
+    Team(const Team&) = default;
+    Team& operator=(Team& T) = default;
     ~Team() = default;
 
 

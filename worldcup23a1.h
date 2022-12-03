@@ -19,6 +19,7 @@
 #include "Team.h"
 #include "AVLTree.h"
 #include "merge.h"
+#include "LinkedList.h"
 #pragma once
 
 class world_cup_t {
@@ -27,6 +28,7 @@ private:
     AVLTree<Player, ConPId> wc_players;
     AVLTree<Player, ConPichichi > wc_pichichi;
     AVLTree<Team, ConTId > wc_capable;
+    LinkedList<Team> wc_list_capable;
     int wc_total_players;
     Player* wc_pichichi_out;
 	

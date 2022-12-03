@@ -20,6 +20,7 @@ public:
     AVLNode* left;
     AVLNode* right;
     AVLNode(ptr_type* data_to_copy) : data(data_to_copy), height(0), left(nullptr), right(nullptr) {}
+    AVLNode() = default;
 };
 
 
@@ -303,22 +304,26 @@ AVLNode<ptr_type>* AVLTree<ptr_type, condition>::balance_tree(AVLNode<ptr_type>*
     {
         if (get_bf(r->left) >= 0)
         {
-            return make_LL_rotation(r);
+            r = make_LL_rotation(r);
+            return r;
         }
         else
         {
-            return make_LR_rotation(r);
+            r = make_LR_rotation(r);
+            return r;
         }
     }
     if (bf == UNBALANCED_NEGATIVE_BF)
     {
         if (get_bf(r->right) <= 0)
         {
-            return make_RR_rotation(r);
+            r = make_RR_rotation(r);
+            return r;
         }
         else
         {
-            return make_RL_rotation(r);
+            r = make_RL_rotation(r);
+            return r;
         }
     }
     return r;

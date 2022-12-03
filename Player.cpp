@@ -16,6 +16,7 @@ Player::Player(int p_id,int p_teamId, int p_goals, int p_cards, int p_games_play
     this->p_pwc_capable= nullptr;
     this->p_pt_players= nullptr;
     this->p_pt_pichichi= nullptr;
+    this->p_pwc_list_capable = nullptr;
     this->p_pcloset_greater = nullptr;
     this->p_pcloset_lower = nullptr;
 

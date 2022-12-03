@@ -6,6 +6,7 @@
 #define WET1_PLAYER_H
 
 #include "AVLTree.h"
+#include "LinkedList.h"
 
 
 
@@ -25,6 +26,7 @@ public:
     AVLNode<Team>* p_pwc_capable;
     AVLNode<Player>* p_pt_players;
     AVLNode<Player>* p_pt_pichichi;
+    LLNode<Team>* p_pwc_list_capable;
     Player* p_pcloset_greater;
     Player* p_pcloset_lower;
 
