@@ -31,7 +31,7 @@ public:
     Team() = default;
     Team(int teamId,int points);
     Team(const Team&) = default;
-    Team& operator=(Team& T) = default;
+    Team& operator=(const Team& T) = default;
     ~Team() = default;
 
 

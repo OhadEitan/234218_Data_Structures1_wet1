@@ -34,6 +34,8 @@ public:
     Player(int p_id, int p_teamId, int p_goals, int p_cards,  int p_games_played,bool p_goal_keeper);
     Player() =default;
     Player(int p_id);
+    Player(const Player& p) = default;
+    Player& operator=(const Player& p) = default;
     int calc_closest(Player*& p1, Player*& p2);
     ~Player() = default;
 };

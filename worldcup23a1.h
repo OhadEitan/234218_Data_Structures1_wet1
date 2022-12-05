@@ -18,7 +18,6 @@
 #include "wet1util.h"
 #include "Team.h"
 #include "AVLTree.h"
-#include "merge.h"
 #include "LinkedList.h"
 #pragma once
 
@@ -31,44 +30,44 @@ private:
     LinkedList<Team> wc_list_capable;
     int wc_total_players;
     Player* wc_pichichi_out;
-	
+
 public:
-	// <DO-NOT-MODIFY> {
-	
-	world_cup_t();
-	virtual ~world_cup_t();
-	
-	StatusType add_team(int teamId, int points);
-	
-	StatusType remove_team(int teamId);
-	
-	StatusType add_player(int playerId, int teamId, int gamesPlayed,
-	                      int goals, int cards, bool goalKeeper);
-	
-	StatusType remove_player(int playerId);
-	
-	StatusType update_player_stats(int playerId, int gamesPlayed,
-	                                int scoredGoals, int cardsReceived);
-	
-	StatusType play_match(int teamId1, int teamId2);
-	
-	output_t<int> get_num_played_games(int playerId);
-	
-	output_t<int> get_team_points(int teamId);
-	
-	StatusType unite_teams(int teamId1, int teamId2, int newTeamId);
-	
-	output_t<int> get_top_scorer(int teamId);
-	
-	output_t<int> get_all_players_count(int teamId);
-	
-	StatusType get_all_players(int teamId, int *const output);
-	
-	output_t<int> get_closest_player(int playerId, int teamId);
-	
-	output_t<int> knockout_winner(int minTeamId, int maxTeamId);
-	
-	// } </DO-NOT-MODIFY>
+    // <DO-NOT-MODIFY> {
+
+    world_cup_t();
+    virtual ~world_cup_t();
+
+    StatusType add_team(int teamId, int points);
+
+    StatusType remove_team(int teamId);
+
+    StatusType add_player(int playerId, int teamId, int gamesPlayed,
+                          int goals, int cards, bool goalKeeper);
+
+    StatusType remove_player(int playerId);
+
+    StatusType update_player_stats(int playerId, int gamesPlayed,
+                                   int scoredGoals, int cardsReceived);
+
+    StatusType play_match(int teamId1, int teamId2);
+
+    output_t<int> get_num_played_games(int playerId);
+
+    output_t<int> get_team_points(int teamId);
+
+    StatusType unite_teams(int teamId1, int teamId2, int newTeamId);
+
+    output_t<int> get_top_scorer(int teamId);
+
+    output_t<int> get_all_players_count(int teamId);
+
+    StatusType get_all_players(int teamId, int *const output);
+
+    output_t<int> get_closest_player(int playerId, int teamId);
+
+    output_t<int> knockout_winner(int minTeamId, int maxTeamId);
+
+    // } </DO-NOT-MODIFY>
 };
 
 #endif // WORLDCUP23A1_H_

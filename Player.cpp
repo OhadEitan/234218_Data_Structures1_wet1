@@ -3,12 +3,13 @@
 //
 
 #include "Player.h"
-#include "math.h"
+//#include "math.h"
 
+int abs(int n) { return n > 0 ? n : -n; }
 
 Player::Player(int p_id,int p_teamId, int p_goals, int p_cards, int p_games_played, bool p_goal_keeper)
-    : p_id(p_id),p_teamId(p_teamId), p_goals(p_goals), p_cards(p_cards),p_games_played(p_games_played),
-      p_goal_keeper(p_goal_keeper)
+        : p_id(p_id),p_teamId(p_teamId), p_goals(p_goals), p_cards(p_cards),p_games_played(p_games_played),
+          p_goal_keeper(p_goal_keeper)
 {
     this->p_pteam = nullptr;
     this->p_pwc_players= nullptr;
@@ -23,7 +24,7 @@ Player::Player(int p_id,int p_teamId, int p_goals, int p_cards, int p_games_play
 }
 
 Player::Player(int p_id): p_id(p_id),p_teamId(0), p_goals(0),
-    p_cards(0),p_games_played(0),p_goal_keeper(0), p_pteam(nullptr),
+                          p_cards(0),p_games_played(0),p_goal_keeper(0), p_pteam(nullptr),
                           p_pwc_players(nullptr), p_pwc_pichichi(nullptr),
                           p_pwc_capable(nullptr), p_pt_players(nullptr),
                           p_pt_pichichi(nullptr),p_pcloset_greater(nullptr),
@@ -39,7 +40,20 @@ int getClosest(int val1, int val2,int target)
 
 }
 
-int  Player::calc_closest(Player*& p1, Player*& p2) {
+int  Player::calc_closest(Player*& p1, Player*& p2)
+{
+    if (p2 == nullptr && p1 == nullptr)
+    {
+        return -1;
+    }
+    if (p1 == nullptr)
+    {
+        return p2->p_id;
+    }
+    if (p2 == nullptr)
+    {
+        return p1->p_id;
+    }
     if (abs(this->p_goals- p1->p_goals) < abs(p2->p_goals-this->p_goals))
     {
         return  p1->p_id;
@@ -73,6 +87,6 @@ int  Player::calc_closest(Player*& p1, Player*& p2) {
             }
         }
     }
+    return -1;
 }
-
 
