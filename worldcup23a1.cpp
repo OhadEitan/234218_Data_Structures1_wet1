@@ -475,12 +475,16 @@ StatusType world_cup_t::unite_teams(int teamId1, int teamId2, int newTeamId)
                 {
                     new_team->data->p_twc_list_capable = this->wc_list_capable.insert_head(new_team->data);
                 }
-                else
+                if (capable_team_before_specific->data->p_twc_list_capable->next != new_team->data->p_twc_list_capable)
                 {
-                    new_team->data->p_twc_list_capable = this->wc_list_capable.insert_after(new_team->data,
-                                                                                            capable_team_before_specific->data->p_twc_list_capable);
+                    new_team->data->p_twc_list_capable = this->wc_list_capable.insert_after(new_team->data,capable_team_before_specific->data->p_twc_list_capable);
                 }
             }
+
+
+
+
+
         }
         if (teamId1 == newTeamId)
         {
